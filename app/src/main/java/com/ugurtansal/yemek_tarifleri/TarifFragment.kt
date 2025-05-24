@@ -287,4 +287,9 @@ class TarifFragment : Fragment() {
         return Bitmap.createScaledBitmap(kullaniciBitmap, width, height, true)
     }
 
+    override fun onDestroyView() {
+        super.onDestroyView()
+        mDisposable.clear() //RxJava ile veri akışını yönetmek için kullanılır.Hafızayı temizlemek için kullanılır.
+    }
+
 }
