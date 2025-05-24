@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.ImageDecoder
 import android.net.Uri
 import android.os.Build
@@ -28,6 +29,7 @@ import com.ugurtansal.yemek_tarifleri.databinding.FragmentTarifBinding
 import com.ugurtansal.yemek_tarifleri.model.Tarif
 import com.ugurtansal.yemek_tarifleri.roomDb.TarifDAO
 import com.ugurtansal.yemek_tarifleri.roomDb.TarifDatabase
+import io.reactivex.rxjava3.android.schedulers.AndroidSchedulers
 import io.reactivex.rxjava3.disposables.CompositeDisposable
 import io.reactivex.rxjava3.schedulers.Schedulers
 import java.io.ByteArrayOutputStream
@@ -87,10 +89,32 @@ class TarifFragment : Fragment() {
             } else {
                 binding.kaydetBtn.isEnabled = false
                 binding.silBtn.isEnabled = true
+                val id= TarifFragmentArgs.fromBundle(it).id //seçilen tarifin id'si
+
+                mDisposable.add(
+
+                    tarifDao.getById(id)
+                        .subscribeOn(Schedulers.io())
+                        .observeOn(AndroidSchedulers.mainThread())
+                        .subscribe(this::handleResponseForGetById) //işlemin sonucu handleResponseForGetById fonksiyonuna gönderilir
+
+                )
+
+
             }
         }
 
         return binding.root
+    }
+
+    private fun  handleResponseForGetById(tarif: Tarif) {
+        binding.isimTxt.setText(tarif.isim)
+        binding.malzemeTxt.setText(tarif.malzeme)
+
+        if (tarif.gorsel != null) {
+            val bitmap = BitmapFactory.decodeByteArray(tarif.gorsel, 0, tarif.gorsel!!.size)
+            binding.imageView.setImageBitmap(bitmap)
+        }
     }
 
     fun kaydet(view: View) {
