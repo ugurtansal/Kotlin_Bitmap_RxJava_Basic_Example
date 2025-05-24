@@ -47,6 +47,8 @@ class TarifFragment : Fragment() {
 
     private val mDisposable= CompositeDisposable() //RxJava ile veri akışını yönetmek için kullanılır.Hafızayı temizlemek için kullanılır.
 
+    private var secilenTarif:Tarif?=null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         registerLauncher()
@@ -108,13 +110,15 @@ class TarifFragment : Fragment() {
     }
 
     private fun  handleResponseForGetById(tarif: Tarif) {
-        binding.isimTxt.setText(tarif.isim)
-        binding.malzemeTxt.setText(tarif.malzeme)
-
         if (tarif.gorsel != null) {
             val bitmap = BitmapFactory.decodeByteArray(tarif.gorsel, 0, tarif.gorsel!!.size)
             binding.imageView.setImageBitmap(bitmap)
+            secilenTarif= tarif //seçilen tarifi kaydediyoruz
         }
+        binding.isimTxt.setText(tarif.isim)
+        binding.malzemeTxt.setText(tarif.malzeme)
+
+
     }
 
     fun kaydet(view: View) {
@@ -147,7 +151,15 @@ class TarifFragment : Fragment() {
     }
 
     fun sil(view: View) {
-        // val action = TarifFragmentDirections.actionTarifFragment
+        if (secilenTarif == null) {
+            mDisposable.add(
+                tarifDao.delete(secilenTarif!!)
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(AndroidSchedulers.mainThread())
+                    .subscribe(this::handleResponseForInsert) //işlemin sonucu handleResponseForDelete fonksiyonuna gönderilir
+            )
+        }
+
     }
 
     fun gorselSec(view: View) {
